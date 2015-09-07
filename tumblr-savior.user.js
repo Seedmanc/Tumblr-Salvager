@@ -3,38 +3,29 @@
 // @version        0.4.7.6
 // @namespace      codeman38
 // @description    Saves you from ever having to see another post about certain things ever again. Forked by codeman38 from the most recent Chrome extension to be more immediately usable with Greasemonkey and to add support for logical 'and' operations.
-// @include        /^https?://www\.tumblr\.com//
-// @exclude        /^https?://www\.tumblr\.com/blog//
-// @exclude        /^https?://www\.tumblr\.com/upload//
-// @exclude        /^https?://www\.tumblr\.com/inbox//
-// @exclude        /^https?://www\.tumblr\.com/inbox$/
+// @include        https://www.tumblr.com/dashboard*
+// @include        https://www.tumblr.com/tagged/*
 // ==/UserScript==
 
 var settings = {
-	'listBlack': ['survey', 'george wendt&beans'],
-	'listWhite': ['animaniacs', 'pinky&brain'],
+	'listBlack': ['trash'],
+	'listWhite': ['people'],
 	'hide_source': false,
 	'show_notice': true,
 	'logical_and': true,
 	'hide_own_posts': false,
 	'show_words': true,
 	'match_words': false,
-	'promoted_tags': false,
-	'promoted_posts': false,
-	'white_notice': false,
-	'black_notice': false,
+	'hide_promoted': false,
+	'white_notice': true,
+	'black_notice': true,
 	'hide_pinned': false,
 	'auto_unpin': false,
-	'show_tags': false,
-	'hide_premium': true
+	'show_tags': true,
+	'hide_premium': false,
+	
+	'hide_radar':	true
 };
-
-var invalidTumblrURLs = [
-	'http://www.tumblr.com/upload/*',
-	'http://www.tumblr.com/inbox',
-	'http://www.tumblr.com/blog/*',
-	'http://www.tumblr.com/inbox/*'
-]; // Don't run tumblr savior on these pages.
 
 var gotSettings = false;
 var manuallyShown = {};
@@ -44,6 +35,8 @@ var icon = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB
 var whiteListed = {};
 var blackListed = {};
 var hiddenPosts = {};
+
+debugger;
 
 function needstobesaved(theStr) {
 	var blackList, whiteList, rO, i, filterRegex, re;
@@ -363,6 +356,10 @@ function applySettings() {
 	} else {
 		show_premium();
 	}
+	
+	if (settings.hide_radar) {
+		hide_radar();
+	}
 }
 
 function parseSettings(savedSettings) {
@@ -462,7 +459,7 @@ function checkPost(post) {
 		}
 	}
 
-	savedfrom = needstobesaved(post.innerHTML);
+	savedfrom = needstobesaved(post.textContent);
 
 	if (savedfrom.bL.length && savedfrom.wL.length === 0) {
 		if (settings.show_notice) {
@@ -632,8 +629,8 @@ function checkPost(post) {
 	}
 
 	anchors = post.getElementsByTagName('a');
-
-	if (settings.promoted_tags) {
+	
+	if (settings.hide_promoted) {
 		for (a = 0; a < anchors.length; a++) {
 			if (anchors[a].outerHTML && anchors[a].outerHTML.indexOf('blingy blue') >= 0) {
 				anchors[a].outerHTML = anchors[a].outerHTML.replace(/blingy blue/gm, " ");
@@ -641,7 +638,7 @@ function checkPost(post) {
 		}
 	}
 
-	if (settings.promoted_posts) {
+	if (settings.hide_promoted) {
 		if (post.outerHTML.indexOf("promotion_highlighted") >= 0) {
 			remove = post.id;
 			document.getElementById(remove).className = document.getElementById(remove).className.replace(/promotion_highlighted/gm, "");
@@ -651,6 +648,13 @@ function checkPost(post) {
 			ribbon_left.parentNode.removeChild(ribbon_left);
 		}
 	}
+}
+
+function hide_radar(){
+	var remove=document.getElementById('tumblr_radar');
+	remove.parentNode.removeChild(remove);
+	remove=document.getElementsByClassName('controls_section controls_section_radar')[0];
+	remove.parentNode.removeChild(remove);
 }
 
 function handlePostInserted(argPost) {
@@ -767,6 +771,6 @@ function checkurl(url, filter) {
 	return false;
 }
 
-if (!checkurl(window.location.href, invalidTumblrURLs)) {
-	waitForPosts();
-}
+applySettings();
+
+waitForPosts();
