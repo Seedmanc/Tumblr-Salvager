@@ -631,7 +631,9 @@ function hide_radar(){
 }
 
 function hide_recommended(){
-	var toHide=document.getElementsByClassName('is_recommended');
+	var toHide1=document.getElementsByClassName('is_recommended');
+	var toHide2=document.getElementsByClassName('recommended-unit-container');
+	var toHide=toHide1.concat(toHide2);
 	for (i=toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none'); 
 	};
