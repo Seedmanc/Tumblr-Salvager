@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name           Tumblr Savior for Greasemonkey
+// @name           Tumblr Salvager for Greasemonkey
 // @version        0.5
-// @namespace      codeman38
-// @description    Saves you from ever having to see another low-quality post ever again. Forked by Seedmanc from codeman38 to add more control over lists and cleanup code.
+// @namespace      http://github.com/Seedmanc/Tumblr-Salvager
+// @description    Salvages the few high quality posts from the rubble of your dashboard. Forked by Seedmanc from codeman38 to add more control over lists and cleanup code.
 // @include        https://www.tumblr.com/dashboard*
 // @include        https://www.tumblr.com/tagged/*
 // ==/UserScript==
@@ -131,13 +131,6 @@ function show_tags() {
 	addGlobalStyle("notice_tags_css", cssRules);
 }
 
-function hide_tags() {
-	var cssRules = [];
-
-	cssRules[0]  = ".tumblr_savior a.tag {}";
-	addGlobalStyle("notice_tags_css", cssRules);
-}
-
 function show_white_notice() {
 	var cssRules = [];
 
@@ -162,24 +155,6 @@ function show_black_notice() {
 	addGlobalStyle("black_notice_style", cssRules);
 }
 
-function hide_white_notice() {
-	var cssRules = [];
-
-	cssRules[0]  = ".whitelisted {";
-	cssRules[0] += "display: none;";
-	cssRules[0] += "}";
-	addGlobalStyle("white_notice_style", cssRules);
-}
-
-function hide_black_notice() {
-	var cssRules = [];
-
-	cssRules[0]  = ".blacklisted {";
-	cssRules[0] += "display: none;";
-	cssRules[0] += "}";
-	addGlobalStyle("black_notice_style", cssRules);
-}
-
 function hide_premium() {
 	var cssRules = [];
 
@@ -189,26 +164,12 @@ function hide_premium() {
 	addGlobalStyle("premium_style", cssRules);
 }
 
-function show_premium() {
-	var cssRules = [];
-
-	cssRules[0]  = "#tumblr_radar.premium {}";
-	addGlobalStyle("premium_style", cssRules);
-}
-
 function hide_pinned() {
 	var cssRules = [];
 
 	cssRules[0]  = ".promotion_pinned {";
 	cssRules[0] += "display: none;";
 	cssRules[0] += "}";
-	addGlobalStyle("pinned_style", cssRules);
-}
-
-function show_pinned() {
-	var cssRules = [];
-
-	cssRules[0]  = ".promotion_pinned {}";
 	addGlobalStyle("pinned_style", cssRules);
 }
 
@@ -260,13 +221,6 @@ function hide_source() {
 	addGlobalStyle("source_url_style", cssRules);
 }
 
-function show_source() {
-	var cssRules = [];
-
-	cssRules[0]  = 'div.post_source {}';
-	addGlobalStyle("source_url_style", cssRules);
-}
-
 function unpin(thepost) {
 	var clickUnpin, pins, pin;
 
@@ -280,59 +234,38 @@ function unpin(thepost) {
 }
 
 function applySettings() {
-	if (settings.hide_source) {
+	if (settings.hide_source) 
 		hide_source();
-	} else {
-		show_source();
-	}
 
 	if (settings.white_notice || settings.black_notice) {
 		show_ratings();
 	} else {
-		hide_ratings();
+//		hide_ratings();
 	}
 
-	if (settings.black_notice) {
+	if (settings.black_notice) 
 		show_black_notice();
-	} else {
-		hide_black_notice();
-	}
 
-	if (settings.white_notice) {
+	if (settings.white_notice) 
 		show_white_notice();
-	} else {
-		hide_white_notice();
-	}
 
-	if (settings.hide_pinned) {
+	if (settings.hide_pinned) 
 		hide_pinned();
-	} else {
-		show_pinned();
-	}
 
-	if (settings.show_tags) {
-		show_tags();
-	} else {
-		hide_tags();
-	}
+	if (settings.show_tags) 
+		show_tags(); 
 
-	if (settings.hide_premium) {
+	if (settings.hide_premium) 
 		hide_premium();
-	} else {
-		show_premium();
-	}
 	
-	if (settings.hide_radar) {
+	if (settings.hide_radar) 
 		hide_radar();
-	}
 	
-	if (settings.hide_recommended) {
+	if (settings.hide_recommended) 
 		hide_recommended();
-	}
-	
-	if (settings.hide_sponsored) {
+
+	if (settings.hide_sponsored) 
 		hide_sponsored();
-	}
 }
 
 function parseSettings(savedSettings) {
@@ -517,7 +450,7 @@ function checkPost(post) {
 
 					span_notice_tags = document.createElement("span");
 					span_notice_tags.appendChild(document.createTextNode("Tags: "));
-					span_notice_tags.appendChild(document.createTextNode(span_tags[0].textContent));
+					span_notice_tags.appendChild(document.createTextNode(span_tags[0].textContent.replace(/#/g,' #')));
 
 					div_sentence.appendChild(span_notice_tags);
 				}
@@ -609,9 +542,6 @@ function checkPost(post) {
 				anchors[a].outerHTML = anchors[a].outerHTML.replace(/blingy blue/gm, " ");
 			}
 		}
-	}
-
-	if (settings.hide_promoted) {
 		if (post.outerHTML.indexOf("promotion_highlighted") >= 0) {
 			remove = post.id;
 			document.getElementById(remove).className = document.getElementById(remove).className.replace(/promotion_highlighted/gm, "");
@@ -631,9 +561,7 @@ function hide_radar(){
 }
 
 function hide_recommended(){
-	var toHide1=document.getElementsByClassName('is_recommended');
-	var toHide2=document.getElementsByClassName('recommended-unit-container');
-	var toHide=toHide1.concat(toHide2);
+	var toHide=document.querySelectorAll('.is_recommended, .recommended-unit-container');
 	for (i=toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none'); 
 	};
@@ -745,19 +673,6 @@ function waitForPosts() {
 	} else {
 		diaper();
 	}
-}
-
-function checkurl(url, filter) {
-	var filterRegex, re, f;
-
-	for (f = 0; f < filter.length; f++) {
-		filterRegex = filter[f].replace(/\x2a/g, "(.*?)");
-		re = new RegExp(filterRegex);
-		if (url.match(re)) {
-			return true;
-		}
-	}
-	return false;
 }
 
 applySettings();
