@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name           Tumblr Savior for Greasemonkey
-// @version        0.4.7.6
+// @version        0.5
 // @namespace      codeman38
-// @description    Saves you from ever having to see another post about certain things ever again. Forked by codeman38 from the most recent Chrome extension to be more immediately usable with Greasemonkey and to add support for logical 'and' operations.
+// @description    Saves you from ever having to see another low-quality post ever again. Forked by Seedmanc from codeman38 to add more control over lists and cleanup code.
 // @include        https://www.tumblr.com/dashboard*
 // @include        https://www.tumblr.com/tagged/*
 // ==/UserScript==
 
 var settings = {
-	'listBlack': ['trash'],
 	'listWhite': ['people'],
+	'listBlack': ['trash'],
 	'hide_source': false,
 	'show_notice': true,
 	'logical_and': true,
@@ -24,7 +24,9 @@ var settings = {
 	'show_tags': true,
 	'hide_premium': false,
 	
-	'hide_radar':	true
+	'hide_radar':	true,
+	'hide_recommended':true,
+	'hide_sponsored': true
 };
 
 var gotSettings = false;
@@ -38,83 +40,46 @@ var hiddenPosts = {};
 
 debugger;
 
+function matchLists(theStr, list){
+	rA=[];
+	for (i = 0; i < list.length; i++) {
+		spl = splitAnd(list[i], settings.logical_and);
+		matched = true;
+		for (j = 0; j < spl.length; j++) {
+			if (settings.match_words) {
+				filterRegex = '(^|\\W)(' + spl[j].replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
+				re = new RegExp(filterRegex); 
+				matched = theStr.match(re); 
+			} else 
+				matched = (theStr.indexOf(spl[j]) >= 0);
+		}
+		if (matched) {
+			rA.push(list[i]);
+		}
+	}
+	return rA;
+}
+
 function needstobesaved(theStr) {
 	var blackList, whiteList, rO, i, filterRegex, re;
 	blackList = settings.listBlack;
 	whiteList = settings.listWhite;
 
-	rO = {}; //returnObject
+	rO = {}; 	//returnObject
 	rO.bL = []; //returnObject.blackListed
 	rO.wL = []; //returnObject.whiteListed
-
-	theStr = theStr.toLowerCase();
-
-	if (settings.match_words) {
-		for (i = 0; i < whiteList.length; i++) {
-			spl = splitAnd(whiteList[i], settings.logical_and);
-			matched = true;
-			for (j = 0; j < spl.length; j++) {
-				filterRegex = '(^|\\W)(' + spl[j].toLowerCase().replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
-				re = new RegExp(filterRegex);
-				if (!theStr.match(re)) {
-					matched = false;
-				}
-			}
-			if (matched) {
-				rO.wL.push(whiteList[i]);
-			}
-		}
-
-		for (i = 0; i < blackList.length; i++) {
-			spl = splitAnd(blackList[i], settings.logical_and);
-			matched = true;
-			for (j = 0; j < spl.length; j++) {
-				filterRegex = '(^|\\W)(' + spl[j].toLowerCase().replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
-				re = new RegExp(filterRegex);
-				if (!theStr.match(re)) {
-					matched = false;
-				}
-			}
-			if (matched) {
-				rO.bL.push(blackList[i]);
-			}
-		}
-	} else {
-		for (i = 0; i < whiteList.length; i++) {
-			spl = splitAnd(whiteList[i], settings.logical_and);
-			matched = true;
-			for (j = 0; j < spl.length; j++) {
-				if (theStr.indexOf(spl[j].toLowerCase()) < 0) {
-					matched = false;
-				}
-			}
-			if (matched) {
-				rO.wL.push(whiteList[i]);
-			}
-		}
-
-		for (i = 0; i < blackList.length; i++) {
-			spl = splitAnd(blackList[i], settings.logical_and);
-			matched = true;
-			for (j = 0; j < spl.length; j++) {
-				if (theStr.indexOf(spl[j].toLowerCase()) < 0) {
-					matched = false;
-				}
-			}
-			if (matched) {
-				rO.bL.push(blackList[i]);
-			}
-		}
-	}
+ 
+	rO.wL = matchLists(theStr, whiteList);
+	rO.bL = matchLists(theStr, blackList);		
 
 	return rO;
 }
 
 function splitAnd(item, doSplit) {
 	if (doSplit)
-		return item.split("&");
+		return item.split("&").map(Function.prototype.call, String.prototype.toLowerCase);
 	else
-		return new Array(item);
+		return new Array(item.toLowerCase());
 }
 
 function addGlobalStyle(styleID, newRules) {
@@ -360,6 +325,14 @@ function applySettings() {
 	if (settings.hide_radar) {
 		hide_radar();
 	}
+	
+	if (settings.hide_recommended) {
+		hide_recommended();
+	}
+	
+	if (settings.hide_sponsored) {
+		hide_sponsored();
+	}
 }
 
 function parseSettings(savedSettings) {
@@ -459,7 +432,7 @@ function checkPost(post) {
 		}
 	}
 
-	savedfrom = needstobesaved(post.textContent);
+	savedfrom = needstobesaved(post.textContent.toLowerCase());
 
 	if (savedfrom.bL.length && savedfrom.wL.length === 0) {
 		if (settings.show_notice) {
@@ -655,6 +628,20 @@ function hide_radar(){
 	remove.parentNode.removeChild(remove);
 	remove=document.getElementsByClassName('controls_section controls_section_radar')[0];
 	remove.parentNode.removeChild(remove);
+}
+
+function hide_recommended(){
+	var toHide=document.getElementsByClassName('is_recommended');
+	for (i=toHide.length; i--;) {
+		toHide[i].setAttribute('style', 'display:none'); 
+	};
+}
+
+function hide_sponsored(){
+	var toHide=document.getElementsByClassName('yamplus-unit-container');
+	for (i=toHide.length; i--;) {
+		toHide[i].setAttribute('style', 'display:none'); 
+	};
 }
 
 function handlePostInserted(argPost) {
