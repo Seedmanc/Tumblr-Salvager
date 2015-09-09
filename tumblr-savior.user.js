@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Tumblr Salvager for Greasemonkey
+// @name           Tumblr Salvager for GM
 // @version        0.5
 // @namespace      http://github.com/Seedmanc/Tumblr-Salvager
 // @description    Salvage the few high quality posts from the rubble of your dashboard
@@ -16,17 +16,17 @@ var settings = {
 	'hide_own_posts': false,
 	'show_words': true,
 	'match_words': false,
-	'hide_promoted': false,
+	'hide_promoted': true,
 	'white_notice': true,
 	'black_notice': true,
-	'hide_pinned': false,
-	'auto_unpin': false,
+	'hide_pinned': true,
+	'auto_unpin': true,
 	'show_tags': true,
-	'hide_premium': false,
+	'hide_premium': true,
 	
 	'hide_radar':	true,
-	'hide_recommended':true,
-	'hide_sponsored': true
+	'hide_recommended':false,
+	'hide_sponsored': false
 };
 
 var gotSettings = false;
@@ -41,9 +41,9 @@ var hiddenPosts = {};
 debugger;
 
 function matchLists(theStr, list){
-	var rA=[];
+	var rA=[], filterRegex;
 	for (i = 0; i < list.length; i++) {
-		spl = splitAnd(list[i], settings.logical_and);
+		var spl = splitAnd(list[i], settings.logical_and);
 		matched = true;
 		for (j = 0; j < spl.length; j++) {
 			if (settings.match_words) {
@@ -61,7 +61,7 @@ function matchLists(theStr, list){
 }
 
 function needstobesaved(theStr) {
-	var blackList, whiteList, rO, i, filterRegex, re;
+	var blackList, whiteList, rO;
 	blackList = settings.listBlack;
 	whiteList = settings.listWhite;
 
@@ -225,6 +225,8 @@ function unpin(thepost) {
 }
 
 function applySettings() {
+	settings=parseSettings();
+	
 	if (settings.hide_source) 
 		hide_source();
 
@@ -257,17 +259,10 @@ function applySettings() {
 }
 
 function parseSettings(savedSettings) {
-	var parsedSettings = {};
+	var parsedSettings = settings;
 
-	if (savedSettings === undefined || savedSettings === null || savedSettings === '' || savedSettings === '{}') {
+	if (settings === undefined || settings === null || settings === '' || settings === {}) 
 		parsedSettings = defaultSettings;
-	} else {
-		try {
-			parsedSettings = JSON.parse(savedSettings);
-		} catch (err) {
-			parsedSettings = defaultSettings;
-		}
-	}
 
 	return parsedSettings;
 }
@@ -307,7 +302,8 @@ function handleReveal(e) {
 
 
 function checkPost(post) {
-	var olPosts, liPost, bln, wln, liRemove, n, savedfrom, author, li_notice, a_avatar, img_avatar, nipple_border, nipple, a_author, txtPosted, txtContents, j, br, a_reveal, i_reveal, span_notice_tags, span_tags, divRating, imgRating, spanWhitelisted, spanBlacklisted, anchors, a, remove, ribbon_right, ribbon_left;
+	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
+	var divRating, imgRating, spanWhitelisted, spanBlacklisted, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
 
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
@@ -329,28 +325,10 @@ function checkPost(post) {
 		liPost = post;
 	}
 
-	bln = post.getElementsByClassName("blacklisted");
-	wln = post.getElementsByClassName("whitelisted");
 	liRemove = document.getElementById('notification_' + post.id);
 
 	if (liRemove) {
 		liRemove.parentNode.removeChild(liRemove);
-	}
-
-	if (bln.length) {
-		for (n = 0; n < bln.length; n++) {
-			if (bln[n].parentNode) {
-				bln[n].parentNode.removeChild(bln[n]);
-			}
-		}
-	}
-
-	if (wln.length) {
-		for (n = 0; n < wln.length; n++) {
-			if (wln[n].parentNode) {
-				wln[n].parentNode.removeChild(wln[n]);
-			}
-		}
 	}
 
 	savedfrom = needstobesaved(post.textContent.toLowerCase());
@@ -452,16 +430,8 @@ function checkPost(post) {
 		}
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
-	} else if (liPost.style.display === 'none' && liPost.className.indexOf('tumblr_hate') < 0) {
-		liPost.style.display = 'list-item';
-		if (settings.show_notice) {
-			liRemove = document.getElementById('notification_' + post.id);
-			if (liRemove) {
-				olPosts.removeChild(liRemove);
-			}
-		}
 	}
-
+	
 	divRating = document.getElementById('white_rating_' + post.id);
 
 	if (divRating) {
@@ -552,81 +522,14 @@ function hide_recommended(){
 	var toHide=document.querySelectorAll('.is_recommended, .recommended-unit-container');
 	for (i=toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none'); 
-	};
+	}
 }
 
 function hide_sponsored(){
 	var toHide=document.getElementsByClassName('yamplus-unit-container');
 	for (i=toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none'); 
-	};
-}
-
-function handlePostInserted(argPost) {
-	var post = argPost.target;
-
-	if (!post.id || post.id.indexOf('post_') !== 0) {
-		return;
 	}
-
-	if (inProgress[post.id]) {
-		return;
-	}
-
-	if (!gotSettings) {
-		return inProgress[post.id] = true;
-	}
-
-	checkPost(post);
-}
-
-function wireupnodes() {
-	document.addEventListener('animationstart', handlePostInserted, false);
-	document.addEventListener('MSAnimationStart', handlePostInserted, false);
-	document.addEventListener('webkitAnimationStart', handlePostInserted, false);
-	document.addEventListener('OAnimationStart', handlePostInserted, false);
-
-	var cssRules = [];
-
-	cssRules[0]  = "@keyframes nodeInserted {";
-	cssRules[0] += "    from { clip: rect(1px, auto, auto, auto); }";
-	cssRules[0] += "    to { clip: rect(0px, auto, auto, auto); }";
-	cssRules[0] += "}";
-
-	cssRules[1]  = "@-moz-keyframes nodeInserted {";
-	cssRules[1] += "    from { clip: rect(1px, auto, auto, auto); }";
-	cssRules[1] += "    to { clip: rect(0px, auto, auto, auto); }";
-	cssRules[1] += "}";
-
-	cssRules[2]  = "@-webkit-keyframes nodeInserted {";
-	cssRules[2] += "    from { clip: rect(1px, auto, auto, auto); }";
-	cssRules[2] += "    to { clip: rect(0px, auto, auto, auto); }";
-	cssRules[2] += "}";
-
-	cssRules[3]  = "@-ms-keyframes nodeInserted {";
-	cssRules[3] += "    from { clip: rect(1px, auto, auto, auto); }";
-	cssRules[3] += "    to { clip: rect(0px, auto, auto, auto); }";
-	cssRules[3] += "}";
-
-	cssRules[4]  = "@-o-keyframes nodeInserted {";
-	cssRules[4] += "    from { clip: rect(1px, auto, auto, auto); }";
-	cssRules[4] += "    to { clip: rect(0px, auto, auto, auto); }";
-	cssRules[4] += "}";
-
-	cssRules[5]  = "li.post_container div.post, li.post {";
-	cssRules[5] += "    animation-duration: 1ms;";
-	cssRules[5] += "    -o-animation-duration: 1ms;";
-	cssRules[5] += "    -ms-animation-duration: 1ms;";
-	cssRules[5] += "    -moz-animation-duration: 1ms;";
-	cssRules[5] += "    -webkit-animation-duration: 1ms;";
-	cssRules[5] += "    animation-name: nodeInserted;";
-	cssRules[5] += "    -o-animation-name: nodeInserted;";
-	cssRules[5] += "    -ms-animation-name: nodeInserted;";
-	cssRules[5] += "    -moz-animation-name: nodeInserted;";
-	cssRules[5] += "    -webkit-animation-name: nodeInserted;";
-	cssRules[5] += "}";
-
-	addGlobalStyle("wires", cssRules);
 }
 
 function checkPosts() {
@@ -655,13 +558,34 @@ function waitForPosts() {
 	if (olPosts === null && !isTumblrSaviorRunning) {
 		setTimeout(waitForPosts, 10);
 	} else if (!isTumblrSaviorRunning) {
-		wireupnodes();
 		isTumblrSaviorRunning = true;
 		setTimeout(diaper, 200);
 	} else {
 		diaper();
 	}
 }
+
+var defaultSettings = {
+	'listWhite': [],
+	'listBlack': [],
+	'hide_source': false,
+	'show_notice': true,
+	'logical_and': true,
+	'hide_own_posts': false,
+	'show_words': true,
+	'match_words': false,
+	'hide_promoted': false,
+	'white_notice': true,
+	'black_notice': true,
+	'hide_pinned': false,
+	'auto_unpin': false,
+	'show_tags': true,
+	'hide_premium': false,
+	
+	'hide_radar':	false,
+	'hide_recommended':false,
+	'hide_sponsored': false
+};
 
 applySettings();
 
