@@ -2,7 +2,7 @@
 // @name           Tumblr Salvager for Greasemonkey
 // @version        0.5
 // @namespace      http://github.com/Seedmanc/Tumblr-Salvager
-// @description    Salvages the few high quality posts from the rubble of your dashboard. Forked by Seedmanc from codeman38 to add more control over lists and cleanup code.
+// @description    Salvage the few high quality posts from the rubble of your dashboard
 // @include        https://www.tumblr.com/dashboard*
 // @include        https://www.tumblr.com/tagged/*
 // ==/UserScript==
@@ -41,7 +41,7 @@ var hiddenPosts = {};
 debugger;
 
 function matchLists(theStr, list){
-	rA=[];
+	var rA=[];
 	for (i = 0; i < list.length; i++) {
 		spl = splitAnd(list[i], settings.logical_and);
 		matched = true;
@@ -173,15 +173,6 @@ function hide_pinned() {
 	addGlobalStyle("pinned_style", cssRules);
 }
 
-function hide_ratings() {
-	var cssRules = [];
-
-	cssRules[0]  = ".savior_rating {";
-	cssRules[0] += "display: none;";
-	cssRules[0] += "}";
-	addGlobalStyle("savior_rating_style", cssRules);
-}
-
 function show_ratings() {
 	var cssRules = [];
 
@@ -237,11 +228,8 @@ function applySettings() {
 	if (settings.hide_source) 
 		hide_source();
 
-	if (settings.white_notice || settings.black_notice) {
+	if (settings.white_notice || settings.black_notice) 
 		show_ratings();
-	} else {
-//		hide_ratings();
-	}
 
 	if (settings.black_notice) 
 		show_black_notice();
