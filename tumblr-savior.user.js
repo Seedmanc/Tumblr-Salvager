@@ -8,8 +8,8 @@
 // ==/UserScript==
 
 var settings = {
-	'listWhite': ['people'],
-	'listBlack': ['trash'],
+	'listWhite': 'people',
+	'listBlack': 'trash',
 	'hide_source': false,
 	'show_notice': true,
 	'logical_and': true,
@@ -41,6 +41,11 @@ var hiddenPosts = {};
 debugger;
 
 function matchLists(theStr, list){
+	
+	list=list.split(',').map(function(v){
+		return v.trim().toLowerCase();
+	});
+	
 	var rA=[], filterRegex;
 	for (i = 0; i < list.length; i++) {
 		var spl = splitAnd(list[i], settings.logical_and);
@@ -77,9 +82,9 @@ function needstobesaved(theStr) {
 
 function splitAnd(item, doSplit) {
 	if (doSplit)
-		return item.split("&").map(Function.prototype.call, String.prototype.toLowerCase);
+		return item.split("&").map(Function.prototype.call, String.prototype.trim);
 	else
-		return new Array(item.toLowerCase());
+		return new Array(item);
 }
 
 function addGlobalStyle(styleID, newRules) {
@@ -263,7 +268,7 @@ function parseSettings(savedSettings) {
 
 	if (settings === undefined || settings === null || settings === '' || settings === {}) 
 		parsedSettings = defaultSettings;
-
+	
 	return parsedSettings;
 }
 
@@ -566,8 +571,8 @@ function waitForPosts() {
 }
 
 var defaultSettings = {
-	'listWhite': [],
-	'listBlack': [],
+	'listWhite': '',
+	'listBlack': '',
 	'hide_source': false,
 	'show_notice': true,
 	'logical_and': true,
