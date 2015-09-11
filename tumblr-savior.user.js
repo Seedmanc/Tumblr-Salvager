@@ -254,7 +254,7 @@ function applySettings() {
 		hide_premium();
 	
 	if (settings.hide_radar) 
-		hide_radar();
+	//	hide_radar();
 	
 	if (settings.hide_recommended) 
 		hide_recommended();
@@ -552,6 +552,8 @@ function diaper() {
 			inProgress[post.id] = true;
 		}
 	}
+	if (settings.hide_radar)
+		hide_radar();
 	checkPosts();
 }
 
