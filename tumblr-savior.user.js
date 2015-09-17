@@ -8,25 +8,25 @@
 // ==/UserScript==
 
 var settings = {
-	'listWhite': 'people',
-	'listBlack': 'trash',
-	'hide_source': false,
-	'show_notice': true,
-	'logical_and': true,
-	'hide_own_posts': false,
-	'show_words': true,
-	'match_words': false,
-	'hide_promoted': true,
-	'white_notice': true,
-	'black_notice': true,
-	'hide_pinned': true,
-	'auto_unpin': true,
-	'show_tags': true,
-	'hide_premium': true,
+	'listWhite':	'people',
+	'listBlack':	'trash',
+	'hide_source':	false,
+	'show_notice':	true,
+	'logical_and':	true,
+	'hide_own_posts':false,
+	'show_words':	true,
+	'match_words':	false,
+	'hide_promoted':true,
+	'white_notice':	true,
+	'black_notice':	true,
+	'hide_pinned':	true,
+	'auto_unpin':	true,
+	'show_tags':	true,
+	'hide_premium':	true,
 	
 	'hide_radar':	true,
 	'hide_recommended':false,
-	'hide_sponsored': false
+	'hide_sponsored':false
 };
 
 var gotSettings = false;
