@@ -8,8 +8,11 @@
 // ==/UserScript==
 
 var settings = {
+	'listUltraWhite':'quality',
+	'listInfraBlack':'equality',
 	'listWhite':	'people',
 	'listBlack':	'trash',
+	
 	'hide_source':	false,
 	'show_notice':	true,
 	'logical_and':	true,
@@ -66,17 +69,19 @@ function matchLists(theStr, list){
 }
 
 function needstobesaved(theStr) {
-	var blackList, whiteList, rO;
-	blackList = settings.listBlack;
-	whiteList = settings.listWhite;
+	var rO;
 
 	rO = {}; 	//returnObject
+	rO.uWl= [];
+	rO.iBl= [];
 	rO.bL = []; //returnObject.blackListed
 	rO.wL = []; //returnObject.whiteListed
- 
-	rO.wL = matchLists(theStr, whiteList);
-	rO.bL = matchLists(theStr, blackList);		
-
+ 	
+	rO.uWl= matchLists(theStr, settings.listUltraWhite);
+	rO.iBl= matchLists(theStr, settings.listInfraBlack);	
+	rO.wL = matchLists(theStr, settings.listWhite);
+	rO.bL = matchLists(theStr, settings.listBlack);	
+	
 	return rO;
 }
 
@@ -136,27 +141,35 @@ function show_tags() {
 	addGlobalStyle("notice_tags_css", cssRules);
 }
 
-function show_white_notice() {
+function show_white_notices() {
 	var cssRules = [];
 
 	cssRules[0]  = ".whitelisted {";
-	cssRules[0] += "background: #57b787;";
-	if (settings.black_notice) {
-		cssRules[0] += "top: 50px;";
-	} else {
-		cssRules[0] += "top: 20px;";
-	}
+	cssRules[0] += "background: #6c7;";
+	cssRules[0] += "top: 20px;";
 	cssRules[0] += "}";
+	
+	cssRules[1]  = ".uwhitelisted {";
+	cssRules[1] += "background: #6cc;";
+	cssRules[1] += "top: 0px;";
+	cssRules[1] += "}";
+
 	addGlobalStyle("white_notice_style", cssRules);
 }
 
-function show_black_notice() {
+function show_black_notices() {
 	var cssRules = [];
 
 	cssRules[0]  = ".blacklisted {";
 	cssRules[0] += "background: #d93023;";
-	cssRules[0] += "top: 20px;";
+	cssRules[0] += "top: 40px;";
 	cssRules[0] += "}";
+
+	cssRules[1]  = ".iblacklisted {";
+	cssRules[1] += "background: #842;";
+	cssRules[1] += "top: 60px;";
+	cssRules[1] += "}";	
+	
 	addGlobalStyle("black_notice_style", cssRules);
 }
 
@@ -239,10 +252,10 @@ function applySettings() {
 		show_ratings();
 
 	if (settings.black_notice) 
-		show_black_notice();
+		show_black_notices();
 
 	if (settings.white_notice) 
-		show_white_notice();
+		show_white_notices();
 
 	if (settings.hide_pinned) 
 		hide_pinned();
@@ -268,6 +281,11 @@ function parseSettings(savedSettings) {
 
 	if (settings === undefined || settings === null || settings === '' || settings === {}) 
 		parsedSettings = defaultSettings;
+		
+	parsedSettings.listWhite=(typeof parsedSettings.listWhite == 'string')?parsedSettings.listWhite:String(parsedSettings.listWhite||'');
+	parsedSettings.listBlack=(typeof parsedSettings.listBlack == 'string')?parsedSettings.listBlack:String(parsedSettings.listBlack||'');
+	parsedSettings.listUltraWhite=(typeof parsedSettings.listUltraWhite == 'string')?parsedSettings.listUltraWhite:String(parsedSettings.listUltraWhite||'');
+	parsedSettings.listInfraBlack=(typeof parsedSettings.listInfraBlack == 'string')?parsedSettings.listInfraBlack:String(parsedSettings.listInfraBlack||'');
 	
 	return parsedSettings;
 }
@@ -573,6 +591,8 @@ function waitForPosts() {
 }
 
 var defaultSettings = {
+	'listUltraWhite':'',
+	'listInfraBlack':'',
 	'listWhite': '',
 	'listBlack': '',
 	'hide_source': false,
