@@ -173,6 +173,24 @@ function show_black_notices() {
 	addGlobalStyle("black_notice_style", cssRules);
 }
 
+function hide_white_notices() {
+	var cssRules = [];
+
+	cssRules[0]  = ".whitelisted, .uwhitelisted {";
+	cssRules[0] += "display: none;";
+	cssRules[0] += "}";
+	addGlobalStyle("white_notice_style", cssRules);
+}
+
+function hide_black_notices() {
+	var cssRules = [];
+
+	cssRules[0]  = ".blacklisted, .iblacklisted {";
+	cssRules[0] += "display: none;";
+	cssRules[0] += "}";
+	addGlobalStyle("black_notice_style", cssRules);
+}
+
 function hide_premium() {
 	var cssRules = [];
 
@@ -252,10 +270,14 @@ function applySettings() {
 		show_ratings();
 
 	if (settings.black_notice) 
-		show_black_notices();
+		show_black_notices()
+	else
+		hide_black_notices();
 
 	if (settings.white_notice) 
-		show_white_notices();
+		show_white_notices()
+	else
+		hide_white_notices();
 
 	if (settings.hide_pinned) 
 		hide_pinned();
@@ -461,7 +483,7 @@ function checkPost(post) {
 		divRating.parentNode.removeChild(divRating);
 	}
 
-	if (savedfrom.wL.length > 0 && settings.white_notice) {
+	if (savedfrom.wL.length > 0 /* && settings.white_notice*/) {
 		whiteListed[post.id] = [];
 
 		while (savedfrom.wL.length > 0) {
@@ -484,6 +506,30 @@ function checkPost(post) {
 		divRating.appendChild(spanWhitelisted);
 		post.appendChild(divRating);
 	}
+	
+	if (savedfrom.uWl.length > 0 /* && settings.white_notice*/) {
+		whiteListed[post.id] = [];
+
+		while (savedfrom.uWl.length > 0) {
+			whiteListed[post.id].push(savedfrom.uWl.pop());
+		}
+
+		divRating = document.createElement('div');
+		divRating.id = 'uwhite_rating_' + post.id;
+		divRating.className = 'savior_rating uwhitelisted';
+
+		imgRating = document.createElement('img');
+		imgRating.src = 'data:image/png;base64,' + icon;
+		imgRating.title = whiteListed[post.id].join(", ");
+
+		divRating.appendChild(imgRating);
+
+		spanWhitelisted = document.createElement('span');
+		spanWhitelisted.textContent = whiteListed[post.id].join(", ");
+
+		divRating.appendChild(spanWhitelisted);
+		post.appendChild(divRating);
+	}
 
 	divRating = document.getElementById('black_rating_' + post.id);
 
@@ -491,7 +537,7 @@ function checkPost(post) {
 		divRating.parentNode.removeChild(divRating);
 	}
 
-	if (savedfrom.bL.length > 0 && settings.black_notice) {
+	if (savedfrom.bL.length > 0 /* && settings.black_notice*/) {
 		blackListed[post.id] = [];
 
 		while (savedfrom.bL.length > 0) {
@@ -505,7 +551,7 @@ function checkPost(post) {
 		imgRating = document.createElement('img');
 		imgRating.src = 'data:image/png;base64,' + icon;
 		imgRating.title = blackListed[post.id].join(", ");
-
+				
 		divRating.appendChild(imgRating);
 
 		spanBlacklisted = document.createElement('span');
@@ -514,7 +560,31 @@ function checkPost(post) {
 		divRating.appendChild(spanBlacklisted);
 		post.appendChild(divRating);
 	}
+	
+	if (savedfrom.iBl.length > 0 /* && settings.black_notice*/) {
+		blackListed[post.id] = [];
 
+		while (savedfrom.iBl.length > 0) {
+			blackListed[post.id].push(savedfrom.iBl.pop());
+		}
+
+		divRating = document.createElement('div');
+		divRating.id = 'iblack_rating_' + post.id;
+		divRating.className = 'savior_rating iblacklisted';
+
+		imgRating = document.createElement('img');
+		imgRating.src = 'data:image/png;base64,' + icon;
+		imgRating.title = blackListed[post.id].join(", ");
+				
+		divRating.appendChild(imgRating);
+
+		spanBlacklisted = document.createElement('span');
+		spanBlacklisted.textContent = blackListed[post.id].join(", ");
+
+		divRating.appendChild(spanBlacklisted);
+		post.appendChild(divRating);
+	}
+	
 	anchors = post.getElementsByTagName('a');
 	
 	if (settings.hide_promoted) {
