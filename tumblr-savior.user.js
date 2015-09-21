@@ -150,7 +150,7 @@ function show_white_notices() {
 	cssRules[0] += "}";
 	
 	cssRules[1]  = ".uwhitelisted {";
-	cssRules[1] += "background: #6cc;";
+	cssRules[1] += "background: #6cd;";
 	cssRules[1] += "top: 0px;";
 	cssRules[1] += "}";
 
@@ -161,13 +161,15 @@ function show_black_notices() {
 	var cssRules = [];
 
 	cssRules[0]  = ".blacklisted {";
-	cssRules[0] += "background: #d93023;";
+	cssRules[0] += "background: #d33;";
 	cssRules[0] += "top: 40px;";
+	cssRules[0] += "color: #bbb;";
 	cssRules[0] += "}";
 
 	cssRules[1]  = ".iblacklisted {";
-	cssRules[1] += "background: #842;";
+	cssRules[1] += "background: #732;";
 	cssRules[1] += "top: 60px;";
+	cssRules[1] += "color: #bbb;";
 	cssRules[1] += "}";	
 	
 	addGlobalStyle("black_notice_style", cssRules);
@@ -378,7 +380,8 @@ function checkPost(post) {
 
 	savedfrom = needstobesaved(post.textContent.toLowerCase());
 
-	if (savedfrom.bL.length && savedfrom.wL.length === 0) {
+	if (savedfrom.uWl.length===0) 
+	  if ((savedfrom.bL.length && savedfrom.wL.length === 0) || savedfrom.iBl.length)	{
 		if (settings.show_notice) {
 			author = getAuthor(post);
 
@@ -419,29 +422,28 @@ function checkPost(post) {
 			div_sentence.appendChild(txtPosted);
 
 			if (settings.show_words) {
-
 				txtContents = ":";
 
-				for (j = 0; j < savedfrom.bL.length; j++) {
-					if (savedfrom.bL.length > 2 && j !== 0 && j < savedfrom.bL.length - 1) {
+				for (j = 0; j < bls.length; j++) {
+					if (bls.length > 2 && j !== 0 && j < bls.length - 1) {
 						txtContents += ',';
 					}
-					if (savedfrom.bL.length > 1 && j === savedfrom.bL.length - 1) {
+					if (bls.length > 1 && j === bls.length - 1) {
 						txtContents += ' and';
 					}
-					txtContents += ' \'' + savedfrom.bL[j] + '\'';
+					txtContents += ' \'' + bls[j] + '\'';
 				}
 
 				div_sentence.appendChild(document.createTextNode(txtContents));
 			} else {
-				div_sentence.appendChild(document.createTextNode(' something from your blacklist.'));
+				div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
 			}
 
 			a_reveal = document.createElement("a");
 			a_reveal.href = "#";
 
 			i_reveal = document.createElement("i");
-			i_reveal.appendChild(document.createTextNode(" -- click to show."));
+			i_reveal.appendChild(document.createTextNode(" — click to show."));
 
 			li_notice.addEventListener("click", handleReveal, false);
 
