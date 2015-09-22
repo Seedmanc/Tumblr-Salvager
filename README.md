@@ -12,11 +12,12 @@ I'll just quote the extension's original developer, Bjorn Stromberg:
 Here's what's added in my fork from the "Savior" version of this userscript ([https://github.com/codeman38/tumblr-savior-gm](https://github.com/codeman38/tumblr-savior-gm)):
 
 * (implemented) Tumblr Salvager offers you twice as much control over what posts you want to hide or see: in addition to the usual white and black lists it introduces two more: ultra white and infra black ones, that take precedence over the original ones. This way you can fine-tune your preferences and get rid of more annoying stuff while not missing something actually interesting.  
+
   For example, you can put tags describing certain categories of entities (like groups of people) into the common white and black lists, while having tags for singular objects (like person names) into the additional lists.
 
-* (in development) Afraid you'll still hide too much and end up with a barren desert of a dashboard? Fear not, for Tumblr Salvager will fetch posts from the next page of the dashboard should it notice there are too few posts left in the current one. Less clicking, more content.
+* (in development) Afraid you'll still hide too much and end up with a barren desert of a dashboard? Fear not, for Tumblr Salvager will fetch posts from the next page should it notice there are too few of them left in the current one. Less clicking, more content.
 
-* (in development) Tired of seeing same posts being reblogged to and fro by your followees? Tumblr Salvager can hide reblogs of posts you have seen already, optionally counting the times you have seen them and only removing reblogs when enough is enough.
+* (in development) Tired of seeing same posts being reblogged to and fro by your followees? Tumblr Salvager can hide reblogs of posts you have already seen, optionally counting the times you have encountered them and only removing when enough is enough.
 
 
 Here's what's different from the browser-extension version of Tumblr Savior ([binaries](http://bjornstar.com/tumblr-savior) / [source](https://github.com/bjornstar/Tumblr-Savior)):
