@@ -39,8 +39,6 @@ var inProgress = {};
 var icon = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAnNJREFUeNqMU09M02AU/8awC5vJsu2g4ExwkDgJQzfCEsWEgQxI1CVLvHDadYNE9IAm84KJ3EBPBjGe0ETw6AXmwRBPXhjTkjCTicvC+FPKZC1tt7brs1/JcIMY92val+977/3e7/v6HgIAVAtMJpPR4XA463Q6XeV+/f8SbTbbWY/bfT0QCAQpitI/m5wMV/p1WEElqcFgQFc7Ojq9Xm+Pt6vL53K5blxqbraZrVb0ZXk529Pbaz+loLHx/LmhwaHbnk5Pj/ua+2ZrS4vDpiYoiqKRK6AgmqJQU1OTiSCIelEU5WMGrODR+HhUtcCzLGxns3CYz4PAccCp63dzc/Di+TTs03s4BG719Q1UKqjDH5qmD7Cl9igE6rMUi6GJpxPoTuAu+pVOI5Ik0T5NawmRcHi06pKwgra2K66SLIEsiZBYjcOTaBRez87i3wNrJKlVpnZ3oAy73X6xigDjW2I1hZ07W1vAq/IxfD4fDA8Pw0m8mpl5c4pgdGTk/snAT7EYGI1GyGQy2rpQLGpWkiSwWiyWKgK9Xt/AsuwhDiiVSsckOMTv90OhUABeEIA5CoEHY2MPjy8R56tJwvTU1Eu8KBZFbTOZTKJgMIi6u7sRw7JIEiXE87zm6x8YvKcW1ZcVELipzGZzq8ALJVmW4fdBHtbXkyAIBa2irIqSlb/HI8m1PbW9G8qtLGEV+Xw+tfBh4XMoFOo/QxDI6bx8dEz1XY2vbDMMQ8Xj8ZVEIv41lfr5g+M4oUyAY7Tu+q4CK0xvbDCbm5sbuVxua37+/dulxcWPoiTxp4bl5DS2t7d3RcKRx1ar5UItU6qrdZz/hT8CDADaR5pMovP3DQAAAABJRU5ErkJggg==";
 var hiddenPosts = {};
 
-debugger;
-
 function matchLists(theStr, list){
 	
 	list=list.split(',').map(function(v){
@@ -90,6 +88,18 @@ function splitAnd(item, doSplit) {
 		return new Array(item);
 }
 
+function insertStyles(newRules, elmStyle){
+	while (newRules.length > 0) {
+		newRule = newRules.pop();
+		if (elmStyle.sheet !== undefined && elmStyle.sheet !== null && elmStyle.sheet.cssRules[0] !== null) {
+			elmStyle.sheet.insertRule(newRule, 0);
+		} else {
+			elmStyle.appendChild(document.createTextNode(newRule));
+		}
+	}
+	return elmStyle;
+}
+
 function addGlobalStyle(styleID, newRules) {
 	var cStyle, elmStyle, elmHead, newRule;
 
@@ -104,27 +114,13 @@ function addGlobalStyle(styleID, newRules) {
 		elmStyle = document.createElement('style');
 		elmStyle.type = 'text/css';
 		elmStyle.id = styleID;
-		while (newRules.length > 0) {
-			newRule = newRules.pop();
-			if (elmStyle.sheet !== undefined && elmStyle.sheet !== null && elmStyle.sheet.cssRules[0] !== null) {
-				elmStyle.sheet.insertRule(newRule, 0);
-			} else {
-				elmStyle.appendChild(document.createTextNode(newRule));
-			}
-		}
+		elmStyle = insertStyles(newRules, elmStyle);
 		elmHead.appendChild(elmStyle);
 	} else {
 		while (cStyle.sheet.cssRules.length > 0) {
 			cStyle.sheet.deleteRule(0);
 		}
-		while (newRules.length > 0) {
-			newRule = newRules.pop();
-			if (cStyle.sheet !== undefined && cStyle.sheet.cssRules[0] !== null) {
-				cStyle.sheet.insertRule(newRule, 0);
-			} else {
-				cStyle.appendChild(document.createTextNode(newRule));
-			}
-		}
+		cStyle = insertStyles(newRules, cStyle);
 	}
 
 	return true;
@@ -144,12 +140,12 @@ function show_white_notices() {
 
 	cssRules[0]  = ".whitelisted {";
 	cssRules[0] += "background: #6c7;";
-	cssRules[0] += "top: 20px;";
+	cssRules[0] += "top: 45px;";
 	cssRules[0] += "}";
 	
 	cssRules[1]  = ".uwhitelisted {";
 	cssRules[1] += "background: #6cd;";
-	cssRules[1] += "top: 0px;";
+	cssRules[1] += "top: 20px;";
 	cssRules[1] += "}";
 
 	addGlobalStyle("white_notice_style", cssRules);
@@ -160,34 +156,16 @@ function show_black_notices() {
 
 	cssRules[0]  = ".blacklisted {";
 	cssRules[0] += "background: #d33;";
-	cssRules[0] += "top: 40px;";
+	cssRules[0] += "top: 70px;";
 	cssRules[0] += "color: #bbb;";
 	cssRules[0] += "}";
 
 	cssRules[1]  = ".iblacklisted {";
 	cssRules[1] += "background: #732;";
-	cssRules[1] += "top: 60px;";
+	cssRules[1] += "top: 95px;";
 	cssRules[1] += "color: #bbb;";
 	cssRules[1] += "}";	
 	
-	addGlobalStyle("black_notice_style", cssRules);
-}
-
-function hide_white_notices() {
-	var cssRules = [];
-
-	cssRules[0]  = ".whitelisted, .uwhitelisted {";
-	cssRules[0] += "display: none;";
-	cssRules[0] += "}";
-	addGlobalStyle("white_notice_style", cssRules);
-}
-
-function hide_black_notices() {
-	var cssRules = [];
-
-	cssRules[0]  = ".blacklisted, .iblacklisted {";
-	cssRules[0] += "display: none;";
-	cssRules[0] += "}";
 	addGlobalStyle("black_notice_style", cssRules);
 }
 
@@ -270,14 +248,10 @@ function applySettings() {
 		show_ratings();
 
 	if (settings.black_notice) 
-		show_black_notices()
-	else
-		hide_black_notices();
+		show_black_notices();
 
 	if (settings.white_notice) 
-		show_white_notices()
-	else
-		hide_white_notices();
+		show_white_notices();
 
 	if (settings.hide_pinned) 
 		hide_pinned();
@@ -288,14 +262,18 @@ function applySettings() {
 	if (settings.hide_premium) 
 		hide_premium();
 	
-	if (settings.hide_radar) 
-	//	hide_radar();
-	
 	if (settings.hide_recommended) 
 		hide_recommended();
 
 	if (settings.hide_sponsored) 
 		hide_sponsored();
+}
+
+function defaultString(str){
+	if (typeof str == 'string')
+		return str
+	else
+		return String(str||'');
 }
 
 function parseSettings(savedSettings) {
@@ -304,10 +282,10 @@ function parseSettings(savedSettings) {
 	if (settings === undefined || settings === null || settings === '' || settings === {}) 
 		parsedSettings = defaultSettings;
 		
-	parsedSettings.listWhite=(typeof parsedSettings.listWhite == 'string')?parsedSettings.listWhite:String(parsedSettings.listWhite||'');
-	parsedSettings.listBlack=(typeof parsedSettings.listBlack == 'string')?parsedSettings.listBlack:String(parsedSettings.listBlack||'');
-	parsedSettings.listUltraWhite=(typeof parsedSettings.listUltraWhite == 'string')?parsedSettings.listUltraWhite:String(parsedSettings.listUltraWhite||'');
-	parsedSettings.listInfraBlack=(typeof parsedSettings.listInfraBlack == 'string')?parsedSettings.listInfraBlack:String(parsedSettings.listInfraBlack||'');
+	parsedSettings.listWhite = defaultString(parsedSettings.listWhite);
+	parsedSettings.listBlack = defaultString(parsedSettings.listBlack);
+	parsedSettings.listUltraWhite = defaultString(parsedSettings.listUltraWhite);
+	parsedSettings.listInfraBlack = defaultString(parsedSettings.listInfraBlack);
 	
 	return parsedSettings;
 }
@@ -375,7 +353,7 @@ function displayRating(color, post, savedfrom) {
 function checkPost(post) {
 	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
 	var divRating, imgRating, spanWhitelisted, spanBlacklisted, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
-debugger;
+
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
 	}
