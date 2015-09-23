@@ -89,6 +89,7 @@ function splitAnd(item, doSplit) {
 }
 
 function insertStyles(newRules, elmStyle){
+  var newRule;
 	while (newRules.length > 0) {
 		newRule = newRules.pop();
 		if (elmStyle.sheet !== undefined && elmStyle.sheet !== null && elmStyle.sheet.cssRules[0] !== null) {
@@ -101,7 +102,7 @@ function insertStyles(newRules, elmStyle){
 }
 
 function addGlobalStyle(styleID, newRules) {
-	var cStyle, elmStyle, elmHead, newRule;
+	var cStyle, elmStyle, elmHead;
 
 	cStyle = document.getElementById(styleID);
 	elmHead = document.getElementsByTagName('head')[0];
@@ -276,7 +277,7 @@ function defaultString(str){
 		return String(str||'');
 }
 
-function parseSettings(savedSettings) {
+function parseSettings() {
 	var parsedSettings = settings;
 
 	if (settings === undefined || settings === null || settings === '' || settings === {}) 
@@ -326,7 +327,7 @@ function handleReveal(e) {
 
 function displayRating(color, post, savedfrom) {
 
-	var listed={};
+	var listed={}, spanListed;
 	listed[post.id] = [];
 
 	while (savedfrom[color].length > 0) {
@@ -352,7 +353,7 @@ function displayRating(color, post, savedfrom) {
 
 function checkPost(post) {
 	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
-	var divRating, imgRating, spanWhitelisted, spanBlacklisted, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
+	var divRating, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
 
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
