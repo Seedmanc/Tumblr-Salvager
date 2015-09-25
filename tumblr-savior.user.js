@@ -26,7 +26,9 @@ var settings = {
 	'auto_unpin':	true,
 	'show_tags':	true,
 	'hide_premium':	true,
-	
+
+	'hide_seen_reblogs':true,
+	'views_threshold':1,
 	'hide_radar':	true,
 	'hide_recommended':false,
 	'hide_sponsored':false
@@ -64,7 +66,7 @@ function matchLists(theStr, list){
 	return rA;
 }
 
-function needstobesaved(theStr) {
+function needstobesaved(theStr, seen) {
 	var rO;
 
 	rO = {}; 	//returnObject
@@ -72,8 +74,14 @@ function needstobesaved(theStr) {
 	rO.iblack= [];
 	rO.black = []; //returnObject.blackListed
 	rO.white = []; //returnObject.whiteListed
- 	
-	rO.uwhite= matchLists(theStr, settings.listUltraWhite);
+	
+	rO.uwhite= matchLists(theStr, settings.listUltraWhite); 	
+	if (settings.hide_seen_reblogs)
+		if ((seen)&&(seen+1>settings.views_threshold)) {
+			rO.seen = seen;
+			return rO;
+		}
+
 	rO.iblack= matchLists(theStr, settings.listInfraBlack);	
 	rO.white = matchLists(theStr, settings.listWhite);
 	rO.black = matchLists(theStr, settings.listBlack);	
@@ -324,6 +332,10 @@ function handleReveal(e) {
 	manuallyShown[postId] = true;
 }
 
+function getID(post){
+	r_s=JSON.parse(post.getAttribute('data-json'));
+	return {root:String(r_s.root_id||r_s.id), current:String(r_s.id)};
+}
 
 function displayRating(color, post, savedfrom) {
 
@@ -354,7 +366,7 @@ function displayRating(color, post, savedfrom) {
 function checkPost(post) {
 	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
 	var divRating, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
-
+	
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
 	}
@@ -380,11 +392,16 @@ function checkPost(post) {
 	if (liRemove) {
 		liRemove.parentNode.removeChild(liRemove);
 	}
-
-	savedfrom = needstobesaved(post.textContent.toLowerCase());
+	
+	ids = getID(post);
+	reblogs = (localStorage.getItem(ids.root)||'').split(',');
+	if ((reblogs.length==1)&&(reblogs[0]==''))
+		reblogs=[];
+		
+	savedfrom = needstobesaved(post.textContent.toLowerCase(), reblogs.length);
 
 	if (savedfrom.uwhite.length===0) 
-	  if ((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length)	{
+	  if ((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || savedfrom.seen)	{
 	  
 		if (settings.show_notice) {
 			author = getAuthor(post);
@@ -422,27 +439,30 @@ function checkPost(post) {
 			li_notice.appendChild(a_avatar);
 			div_sentence.appendChild(a_author);
 
-			txtPosted = document.createTextNode(" made a post containing");
-			div_sentence.appendChild(txtPosted);
+			if (!savedfrom.seen) {
+				txtPosted = document.createTextNode(" made a post containing");
+				div_sentence.appendChild(txtPosted);
 
-			if (settings.show_words) {
-				var bls = savedfrom.iblack.concat(savedfrom.black);
-				txtContents = ":";
+				if (settings.show_words) {
+					var bls = savedfrom.iblack.concat(savedfrom.black);
+					txtContents = ":";
 
-				for (j = 0; j < bls.length; j++) {
-					if (bls.length > 2 && j !== 0 && j < bls.length - 1) {
-						txtContents += ',';
+					for (j = 0; j < bls.length; j++) {
+						if (bls.length > 2 && j !== 0 && j < bls.length - 1) {
+							txtContents += ',';
+						}
+						if (bls.length > 1 && j === bls.length - 1) {
+							txtContents += ' and';
+						}
+						txtContents += ' \'' + bls[j] + '\'';
 					}
-					if (bls.length > 1 && j === bls.length - 1) {
-						txtContents += ' and';
-					}
-					txtContents += ' \'' + bls[j] + '\'';
+
+					div_sentence.appendChild(document.createTextNode(txtContents));
+				} else {
+					div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
 				}
-
-				div_sentence.appendChild(document.createTextNode(txtContents));
-			} else {
-				div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
-			}
+			} else 
+				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen "+Math.max(1,savedfrom.seen)+" time(s) already."));
 
 			a_reveal = document.createElement("a");
 			a_reveal.href = "#";
@@ -483,6 +503,12 @@ function checkPost(post) {
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
 	}
+
+	if (post.getElementsByClassName('reblog_source').length)
+		if (reblogs.indexOf(ids.current)==-1)	{
+			reblogs.push(ids.current);
+			localStorage.setItem(ids.root, reblogs);
+		}
 	
 	divRating = document.getElementById('white_rating_' + post.id);
 
@@ -605,7 +631,9 @@ var defaultSettings = {
 	'auto_unpin': false,
 	'show_tags': true,
 	'hide_premium': false,
-	
+
+	'hide_seen_reblogs':false,
+	'views_threshold':2,	
 	'hide_radar':	false,
 	'hide_recommended':false,
 	'hide_sponsored': false
