@@ -28,7 +28,7 @@ var settings = {
 	'hide_premium':	true,
 
 	'hide_seen_reblogs':true,
-	'views_threshold':1,
+	'views_threshold':2,
 	'hide_radar':	true,
 	'hide_recommended':false,
 	'hide_sponsored':false
@@ -76,8 +76,9 @@ function needstobesaved(theStr, seen) {
 	rO.white = []; //returnObject.whiteListed
 	
 	rO.uwhite= matchLists(theStr, settings.listUltraWhite); 	
+	
 	if (settings.hide_seen_reblogs)
-		if ((seen)&&(seen+1>settings.views_threshold)) {
+		if ((seen)&&(seen>settings.views_threshold)) {
 			rO.seen = seen;
 			return rO;
 		}
@@ -295,6 +296,7 @@ function parseSettings() {
 	parsedSettings.listBlack = defaultString(parsedSettings.listBlack);
 	parsedSettings.listUltraWhite = defaultString(parsedSettings.listUltraWhite);
 	parsedSettings.listInfraBlack = defaultString(parsedSettings.listInfraBlack);
+	parsedSettings.views_threshold= Math.max(1, parsedSettings.views_threshold||0);
 	
 	return parsedSettings;
 }
@@ -397,11 +399,14 @@ function checkPost(post) {
 	reblogs = (localStorage.getItem(ids.root)||'').split(',');
 	if ((reblogs.length==1)&&(reblogs[0]==''))
 		reblogs=[];
+	if (reblogs.indexOf(ids.current)==-1)	
+		reblogs.push(ids.current);
+	is_reblog = post.getElementsByClassName('reblog_source').length>0;
 		
 	savedfrom = needstobesaved(post.textContent.toLowerCase(), reblogs.length);
 
-	if (savedfrom.uwhite.length===0) 
-	  if ((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || savedfrom.seen)	{
+	if ((savedfrom.uwhite.length===0) &&
+	   ((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || (savedfrom.seen && is_reblog)))	{
 	  
 		if (settings.show_notice) {
 			author = getAuthor(post);
@@ -462,7 +467,7 @@ function checkPost(post) {
 					div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
 				}
 			} else 
-				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen "+Math.max(1,savedfrom.seen)+" time(s) already."));
+				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen "+Math.max(1,savedfrom.seen-1)+" time(s) already."));
 
 			a_reveal = document.createElement("a");
 			a_reveal.href = "#";
@@ -502,14 +507,9 @@ function checkPost(post) {
 		}
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
-	}
+	} else
+		localStorage.setItem(ids.root, reblogs);
 
-	if (post.getElementsByClassName('reblog_source').length)
-		if (reblogs.indexOf(ids.current)==-1)	{
-			reblogs.push(ids.current);
-			localStorage.setItem(ids.root, reblogs);
-		}
-	
 	divRating = document.getElementById('white_rating_' + post.id);
 
 	if (divRating) {
@@ -579,9 +579,12 @@ function hide_sponsored(){
 }
 
 function checkPosts() {
-	for (var postId in inProgress) {
-		checkPost(document.getElementById(postId));
-		delete inProgress[postId];
+	var keys = Object.keys(inProgress);
+	for(var i = keys.length; i--; ) {
+		if (inProgress.hasOwnProperty(keys[i])) {
+			checkPost(document.getElementById(keys[i]));
+			delete inProgress[keys[i]];
+		}
 	}
 }
 
@@ -642,3 +645,5 @@ var defaultSettings = {
 applySettings();
 
 waitForPosts();
+
+//todo add image hash checks in search of duplicating posts?
