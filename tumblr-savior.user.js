@@ -28,7 +28,8 @@ var settings = {
 	'hide_premium':	true,
 
 	'hide_seen_reblogs':true,
-	'views_threshold':2,
+	'views_threshold':1,
+	
 	'hide_radar':	true,
 	'hide_recommended':false,
 	'hide_sponsored':false
@@ -55,9 +56,9 @@ function matchLists(theStr, list){
 			if (settings.match_words) {
 				filterRegex = '(^|\\W)(' + spl[j].replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
 				re = new RegExp(filterRegex); 
-				matched = theStr.match(re); 
+				matched = theStr.match(re)?matched:false; 
 			} else 
-				matched = (theStr.indexOf(spl[j]) >= 0);
+				matched = (theStr.indexOf(spl[j]) < 0)?false:matched;
 		}
 		if (matched) {
 			rA.push(list[i]);
@@ -507,7 +508,7 @@ function checkPost(post) {
 		}
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
-	} else
+	} else if (is_reblog)
 		localStorage.setItem(ids.root, reblogs);
 
 	divRating = document.getElementById('white_rating_' + post.id);
@@ -634,7 +635,6 @@ var defaultSettings = {
 	'auto_unpin': false,
 	'show_tags': true,
 	'hide_premium': false,
-
 	'hide_seen_reblogs':false,
 	'views_threshold':2,	
 	'hide_radar':	false,
