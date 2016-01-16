@@ -29,7 +29,7 @@ var settings = {
 
 	'hide_seen_reblogs':true,
 	'views_threshold':1,
-	
+
 	'hide_radar':	true,
 	'hide_recommended':false,
 	'hide_sponsored':false
@@ -41,13 +41,14 @@ var isTumblrSaviorRunning = false;
 var inProgress = {};
 var icon = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAnNJREFUeNqMU09M02AU/8awC5vJsu2g4ExwkDgJQzfCEsWEgQxI1CVLvHDadYNE9IAm84KJ3EBPBjGe0ETw6AXmwRBPXhjTkjCTicvC+FPKZC1tt7brs1/JcIMY92val+977/3e7/v6HgIAVAtMJpPR4XA463Q6XeV+/f8SbTbbWY/bfT0QCAQpitI/m5wMV/p1WEElqcFgQFc7Ojq9Xm+Pt6vL53K5blxqbraZrVb0ZXk529Pbaz+loLHx/LmhwaHbnk5Pj/ua+2ZrS4vDpiYoiqKRK6AgmqJQU1OTiSCIelEU5WMGrODR+HhUtcCzLGxns3CYz4PAccCp63dzc/Di+TTs03s4BG719Q1UKqjDH5qmD7Cl9igE6rMUi6GJpxPoTuAu+pVOI5Ik0T5NawmRcHi06pKwgra2K66SLIEsiZBYjcOTaBRez87i3wNrJKlVpnZ3oAy73X6xigDjW2I1hZ07W1vAq/IxfD4fDA8Pw0m8mpl5c4pgdGTk/snAT7EYGI1GyGQy2rpQLGpWkiSwWiyWKgK9Xt/AsuwhDiiVSsckOMTv90OhUABeEIA5CoEHY2MPjy8R56tJwvTU1Eu8KBZFbTOZTKJgMIi6u7sRw7JIEiXE87zm6x8YvKcW1ZcVELipzGZzq8ALJVmW4fdBHtbXkyAIBa2irIqSlb/HI8m1PbW9G8qtLGEV+Xw+tfBh4XMoFOo/QxDI6bx8dEz1XY2vbDMMQ8Xj8ZVEIv41lfr5g+M4oUyAY7Tu+q4CK0xvbDCbm5sbuVxua37+/dulxcWPoiTxp4bl5DS2t7d3RcKRx1ar5UItU6qrdZz/hT8CDADaR5pMovP3DQAAAABJRU5ErkJggg==";
 var hiddenPosts = {};
+var localStorageLimit = 500;
 
 function matchLists(theStr, list){
-	
+
 	list=list.split(',').map(function(v){
 		return v.trim().toLowerCase();
 	});
-	
+
 	var rA=[], filterRegex;
 	for (i = 0; i < list.length; i++) {
 		var spl = splitAnd(list[i], settings.logical_and);
@@ -55,9 +56,9 @@ function matchLists(theStr, list){
 		for (j = 0; j < spl.length; j++) {
 			if (settings.match_words) {
 				filterRegex = '(^|\\W)(' + spl[j].replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
-				re = new RegExp(filterRegex); 
-				matched = theStr.match(re)?matched:false; 
-			} else 
+				re = new RegExp(filterRegex);
+				matched = theStr.match(re)?matched:false;
+			} else
 				matched = (theStr.indexOf(spl[j]) < 0)?false:matched;
 		}
 		if (matched) {
@@ -67,7 +68,7 @@ function matchLists(theStr, list){
 	return rA;
 }
 
-function needstobesaved(theStr, seen) {
+function needstobesaved(theStr, seen, is_reblog) {
 	var rO;
 
 	rO = {}; 	//returnObject
@@ -75,19 +76,19 @@ function needstobesaved(theStr, seen) {
 	rO.iblack= [];
 	rO.black = []; //returnObject.blackListed
 	rO.white = []; //returnObject.whiteListed
-	
-	rO.uwhite= matchLists(theStr, settings.listUltraWhite); 	
-	
-	if (settings.hide_seen_reblogs)
+
+	rO.uwhite= matchLists(theStr, settings.listUltraWhite);
+
+	if (settings.hide_seen_reblogs && is_reblog)
 		if ((seen)&&(seen>settings.views_threshold)) {
 			rO.seen = seen;
 			return rO;
 		}
 
-	rO.iblack= matchLists(theStr, settings.listInfraBlack);	
+	rO.iblack= matchLists(theStr, settings.listInfraBlack);
 	rO.white = matchLists(theStr, settings.listWhite);
-	rO.black = matchLists(theStr, settings.listBlack);	
-	
+	rO.black = matchLists(theStr, settings.listBlack);
+
 	return rO;
 }
 
@@ -99,7 +100,7 @@ function splitAnd(item, doSplit) {
 }
 
 function insertStyles(newRules, elmStyle){
-  var newRule;
+	var newRule;
 	while (newRules.length > 0) {
 		newRule = newRules.pop();
 		if (elmStyle.sheet !== undefined && elmStyle.sheet !== null && elmStyle.sheet.cssRules[0] !== null) {
@@ -153,7 +154,7 @@ function show_white_notices() {
 	cssRules[0] += "background: #6c7;";
 	cssRules[0] += "top: 45px;";
 	cssRules[0] += "}";
-	
+
 	cssRules[1]  = ".uwhitelisted {";
 	cssRules[1] += "background: #6cd;";
 	cssRules[1] += "top: 20px;";
@@ -175,8 +176,8 @@ function show_black_notices() {
 	cssRules[1] += "background: #732;";
 	cssRules[1] += "top: 95px;";
 	cssRules[1] += "color: #bbb;";
-	cssRules[1] += "}";	
-	
+	cssRules[1] += "}";
+
 	addGlobalStyle("black_notice_style", cssRules);
 }
 
@@ -251,32 +252,32 @@ function unpin(thepost) {
 
 function applySettings() {
 	settings=parseSettings();
-	
-	if (settings.hide_source) 
+
+	if (settings.hide_source)
 		hide_source();
 
-	if (settings.white_notice || settings.black_notice) 
+	if (settings.white_notice || settings.black_notice)
 		show_ratings();
 
-	if (settings.black_notice) 
+	if (settings.black_notice)
 		show_black_notices();
 
-	if (settings.white_notice) 
+	if (settings.white_notice)
 		show_white_notices();
 
-	if (settings.hide_pinned) 
+	if (settings.hide_pinned)
 		hide_pinned();
 
-	if (settings.show_tags) 
-		show_tags(); 
+	if (settings.show_tags)
+		show_tags();
 
-	if (settings.hide_premium) 
+	if (settings.hide_premium)
 		hide_premium();
-	
-	if (settings.hide_recommended) 
+
+	if (settings.hide_recommended)
 		hide_recommended();
 
-	if (settings.hide_sponsored) 
+	if (settings.hide_sponsored)
 		hide_sponsored();
 }
 
@@ -290,15 +291,15 @@ function defaultString(str){
 function parseSettings() {
 	var parsedSettings = settings;
 
-	if (settings === undefined || settings === null || settings === '' || settings === {}) 
+	if (settings === undefined || settings === null || settings === '' || settings === {})
 		parsedSettings = defaultSettings;
-		
+
 	parsedSettings.listWhite = defaultString(parsedSettings.listWhite);
 	parsedSettings.listBlack = defaultString(parsedSettings.listBlack);
 	parsedSettings.listUltraWhite = defaultString(parsedSettings.listUltraWhite);
 	parsedSettings.listInfraBlack = defaultString(parsedSettings.listInfraBlack);
 	parsedSettings.views_threshold= Math.max(1, parsedSettings.views_threshold||0);
-	
+
 	return parsedSettings;
 }
 
@@ -369,7 +370,7 @@ function displayRating(color, post, savedfrom) {
 function checkPost(post) {
 	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
 	var divRating, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
-	
+
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
 	}
@@ -395,20 +396,20 @@ function checkPost(post) {
 	if (liRemove) {
 		liRemove.parentNode.removeChild(liRemove);
 	}
-	
+
 	ids = getID(post);
 	reblogs = (localStorage.getItem(ids.root)||'').split(',');
 	if ((reblogs.length==1)&&(reblogs[0]==''))
 		reblogs=[];
-	if (reblogs.indexOf(ids.current)==-1)	
+	if (reblogs.indexOf(ids.current)==-1)
 		reblogs.push(ids.current);
 	is_reblog = post.getElementsByClassName('reblog_source').length>0;
-		
-	savedfrom = needstobesaved(post.textContent.toLowerCase(), reblogs.length);
+
+	savedfrom = needstobesaved(post.textContent.toLowerCase(), reblogs.length, is_reblog);  //todo fix textcontent matching json data with links
 
 	if ((savedfrom.uwhite.length===0) &&
-	   ((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || (savedfrom.seen && is_reblog)))	{
-	  
+		((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || (savedfrom.seen && is_reblog)))	{
+
 		if (settings.show_notice) {
 			author = getAuthor(post);
 
@@ -467,7 +468,7 @@ function checkPost(post) {
 				} else {
 					div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
 				}
-			} else 
+			} else
 				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen "+Math.max(1,savedfrom.seen-1)+" time(s) already."));
 
 			a_reveal = document.createElement("a");
@@ -508,20 +509,25 @@ function checkPost(post) {
 		}
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
-	} else if (is_reblog)
+	} else if (is_reblog) {
+		if ((localStorage.length >= localStorageLimit) && !(localStorage.getItem(ids.root))) {
+			idx = (parseInt(localStorage.key(0))<parseInt(localStorage.key(localStorage.length-1)))?localStorage.key(0):localStorage.key(localStorage.length-1);
+			localStorage.removeItem(idx);	//screw this
+		}
 		localStorage.setItem(ids.root, reblogs);
+	}
 
 	divRating = document.getElementById('white_rating_' + post.id);
 
 	if (divRating) {
 		divRating.parentNode.removeChild(divRating);
 	}
-	
+
 	if (settings.white_notice) {
-		if (savedfrom.white.length > 0) 
+		if (savedfrom.white.length > 0)
 			displayRating('white', post, savedfrom);
 
-		if (savedfrom.uwhite.length > 0) 
+		if (savedfrom.uwhite.length > 0)
 			displayRating('uwhite', post, savedfrom);
 	}
 
@@ -530,17 +536,17 @@ function checkPost(post) {
 	if (divRating) {
 		divRating.parentNode.removeChild(divRating);
 	}
-	
+
 	if (settings.black_notice) {
-		if (savedfrom.black.length > 0) 
+		if (savedfrom.black.length > 0)
 			displayRating('black', post, savedfrom);
 
-		if (savedfrom.iblack.length > 0) 
+		if (savedfrom.iblack.length > 0)
 			displayRating('iblack', post, savedfrom);
 	}
-	
+
 	anchors = post.getElementsByTagName('a');
-	
+
 	if (settings.hide_promoted) {
 		for (a = 0; a < anchors.length; a++) {
 			if (anchors[a].outerHTML && anchors[a].outerHTML.indexOf('blingy blue') >= 0) {
@@ -568,14 +574,14 @@ function hide_radar(){
 function hide_recommended(){
 	var toHide=document.querySelectorAll('.is_recommended, .recommended-unit-container');
 	for (i=toHide.length; i--;) {
-		toHide[i].setAttribute('style', 'display:none'); 
+		toHide[i].setAttribute('style', 'display:none');
 	}
 }
 
 function hide_sponsored(){
 	var toHide=document.getElementsByClassName('yamplus-unit-container');
 	for (i=toHide.length; i--;) {
-		toHide[i].setAttribute('style', 'display:none'); 
+		toHide[i].setAttribute('style', 'display:none');
 	}
 }
 
@@ -636,7 +642,7 @@ var defaultSettings = {
 	'show_tags': true,
 	'hide_premium': false,
 	'hide_seen_reblogs':false,
-	'views_threshold':2,	
+	'views_threshold':2,
 	'hide_radar':	false,
 	'hide_recommended':false,
 	'hide_sponsored': false
