@@ -8,31 +8,31 @@
 // ==/UserScript==
 
 var settings = {
-	'listUltraWhite':'quality',
-	'listInfraBlack':'equality',
-	'listWhite':	'people',
-	'listBlack':	'trash',
-	
-	'hide_source':	false,
-	'show_notice':	true,
-	'logical_and':	true,
-	'hide_own_posts':false,
-	'show_words':	true,
-	'match_words':	false,
-	'hide_promoted':true,
-	'white_notice':	true,
-	'black_notice':	true,
-	'hide_pinned':	true,
-	'auto_unpin':	true,
-	'show_tags':	true,
-	'hide_premium':	true,
+	'listUltraWhite': 'quality',
+	'listInfraBlack': 'equality',
+	'listWhite':      'people',
+	'listBlack':      'trash',
 
-	'hide_seen_reblogs':true,
-	'views_threshold':1,
+	'hide_source':    false,
+	'show_notice':    true,
+	'logical_and':    true,
+	'hide_own_posts': false,
+	'show_words':     true,
+	'match_words':    false,
+	'hide_promoted':  true,
+	'white_notice':   true,
+	'black_notice':   true,
+	'hide_pinned':    true,
+	'auto_unpin':     true,
+	'show_tags':      true,
+	'hide_premium':   true,
 
-	'hide_radar':	true,
-	'hide_recommended':false,
-	'hide_sponsored':false
+	'hide_seen_reblogs': true,
+	'views_threshold':   1,
+
+	'hide_radar':       true,
+	'hide_recommended': false,
+	'hide_sponsored':   false
 };
 
 var gotSettings = false;
@@ -43,23 +43,25 @@ var icon = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB
 var hiddenPosts = {};
 var localStorageLimit = 500;
 
-function matchLists(theStr, list){
+function matchLists(theStr, list) {
+	var rA = [], filterRegex, matched, spl, re;
 
-	list=list.split(',').map(function(v){
+	list = list.split(',').map(function (v) {
 		return v.trim().toLowerCase();
 	});
 
-	var rA=[], filterRegex;
-	for (i = 0; i < list.length; i++) {
-		var spl = splitAnd(list[i], settings.logical_and);
+	for (var i = 0; i < list.length; i++) {
+		spl = splitAnd(list[i], settings.logical_and);
 		matched = true;
-		for (j = 0; j < spl.length; j++) {
+
+		for (var j = 0; j < spl.length; j++) {
 			if (settings.match_words) {
 				filterRegex = '(^|\\W)(' + spl[j].replace(/\?/g, "\\?").replace(/\)/g, "\\)").replace(/\(/g, "\\(").replace(/\[/g, "\\[").replace(/\x2a/g, "(\\w*?)") + ')(\\W|$)';
 				re = new RegExp(filterRegex);
-				matched = theStr.match(re)?matched:false;
-			} else
-				matched = (theStr.indexOf(spl[j]) < 0)?false:matched;
+				matched = theStr.match(re) ? matched : false;
+			} else {
+				matched = (theStr.indexOf(spl[j]) < 0) ? false : matched;
+			}
 		}
 		if (matched) {
 			rA.push(list[i]);
@@ -69,23 +71,23 @@ function matchLists(theStr, list){
 }
 
 function needstobesaved(theStr, seen, is_reblog) {
-	var rO;
+	var rO = {}; 	//returnObject
 
-	rO = {}; 	//returnObject
-	rO.uwhite= [];
-	rO.iblack= [];
+	rO.uwhite = [];
+	rO.iblack = [];
 	rO.black = []; //returnObject.blackListed
 	rO.white = []; //returnObject.whiteListed
 
-	rO.uwhite= matchLists(theStr, settings.listUltraWhite);
+	rO.uwhite = matchLists(theStr, settings.listUltraWhite);
 
-	if (settings.hide_seen_reblogs && is_reblog)
-		if ((seen)&&(seen>settings.views_threshold)) {
+	if (settings.hide_seen_reblogs && is_reblog) {
+		if ((seen) && (seen > settings.views_threshold)) {
 			rO.seen = seen;
 			return rO;
 		}
+	}
 
-	rO.iblack= matchLists(theStr, settings.listInfraBlack);
+	rO.iblack = matchLists(theStr, settings.listInfraBlack);
 	rO.white = matchLists(theStr, settings.listWhite);
 	rO.black = matchLists(theStr, settings.listBlack);
 
@@ -93,14 +95,16 @@ function needstobesaved(theStr, seen, is_reblog) {
 }
 
 function splitAnd(item, doSplit) {
-	if (doSplit)
+	if (doSplit) {
 		return item.split("&").map(Function.prototype.call, String.prototype.trim);
-	else
+	} else {
 		return new Array(item);
+	}
 }
 
-function insertStyles(newRules, elmStyle){
+function insertStyles(newRules, elmStyle) {
 	var newRule;
+
 	while (newRules.length > 0) {
 		newRule = newRules.pop();
 		if (elmStyle.sheet !== undefined && elmStyle.sheet !== null && elmStyle.sheet.cssRules[0] !== null) {
@@ -141,7 +145,7 @@ function addGlobalStyle(styleID, newRules) {
 function show_tags() {
 	var cssRules = [];
 
-	cssRules[0]  = ".tumblr_savior a.tag {";
+	cssRules[0] = ".tumblr_savior a.tag {";
 	cssRules[0] += "font-weight: normal !important;";
 	cssRules[0] += "}";
 	addGlobalStyle("notice_tags_css", cssRules);
@@ -150,12 +154,12 @@ function show_tags() {
 function show_white_notices() {
 	var cssRules = [];
 
-	cssRules[0]  = ".whitelisted {";
+	cssRules[0] = ".whitelisted {";
 	cssRules[0] += "background: #6c7;";
 	cssRules[0] += "top: 45px;";
 	cssRules[0] += "}";
 
-	cssRules[1]  = ".uwhitelisted {";
+	cssRules[1] = ".uwhitelisted {";
 	cssRules[1] += "background: #6cd;";
 	cssRules[1] += "top: 20px;";
 	cssRules[1] += "}";
@@ -166,13 +170,13 @@ function show_white_notices() {
 function show_black_notices() {
 	var cssRules = [];
 
-	cssRules[0]  = ".blacklisted {";
+	cssRules[0] = ".blacklisted {";
 	cssRules[0] += "background: #d33;";
 	cssRules[0] += "top: 70px;";
 	cssRules[0] += "color: #bbb;";
 	cssRules[0] += "}";
 
-	cssRules[1]  = ".iblacklisted {";
+	cssRules[1] = ".iblacklisted {";
 	cssRules[1] += "background: #732;";
 	cssRules[1] += "top: 95px;";
 	cssRules[1] += "color: #bbb;";
@@ -184,7 +188,7 @@ function show_black_notices() {
 function hide_premium() {
 	var cssRules = [];
 
-	cssRules[0]  = "#tumblr_radar.premium {";
+	cssRules[0] = "#tumblr_radar.premium {";
 	cssRules[0] += "display: none;";
 	cssRules[0] += "}";
 	addGlobalStyle("premium_style", cssRules);
@@ -193,7 +197,7 @@ function hide_premium() {
 function hide_pinned() {
 	var cssRules = [];
 
-	cssRules[0]  = ".promotion_pinned {";
+	cssRules[0] = ".promotion_pinned {";
 	cssRules[0] += "display: none;";
 	cssRules[0] += "}";
 	addGlobalStyle("pinned_style", cssRules);
@@ -202,7 +206,7 @@ function hide_pinned() {
 function show_ratings() {
 	var cssRules = [];
 
-	cssRules[0]  = ".savior_rating {";
+	cssRules[0] = ".savior_rating {";
 	cssRules[0] += "position: absolute;";
 	cssRules[0] += "left: 532px;";
 	cssRules[0] += "width: 20px;";
@@ -211,18 +215,18 @@ function show_ratings() {
 	cssRules[0] += "-webkit-box-shadow: 0 1px 5px rgba(0, 0, 0, .46);";
 	cssRules[0] += "border-radius: 4px;";
 	cssRules[0] += "}";
-	cssRules[1]  = ".savior_rating:hover {";
+	cssRules[1] = ".savior_rating:hover {";
 	cssRules[1] += "overflow: hidden;";
 	cssRules[1] += "white-space: nowrap;";
 	cssRules[1] += "width: 200px;";
 	cssRules[1] += "}";
-	cssRules[2]  = ".savior_rating:hover span{";
+	cssRules[2] = ".savior_rating:hover span{";
 	cssRules[2] += "display: inline;";
 	cssRules[2] += "}";
-	cssRules[3]  = ".savior_rating img {";
+	cssRules[3] = ".savior_rating img {";
 	cssRules[3] += "margin: 2px 0px 0px 2px;";
 	cssRules[3] += "}";
-	cssRules[4]  = ".savior_rating span{";
+	cssRules[4] = ".savior_rating span{";
 	cssRules[4] += "display: none;";
 	cssRules[4] += "line-height:20px;";
 	cssRules[4] += "margin-left:2px;";
@@ -234,7 +238,7 @@ function show_ratings() {
 function hide_source() {
 	var cssRules = [];
 
-	cssRules[0]  = 'div.post_source {display:none!important;}';
+	cssRules[0] = 'div.post_source {display:none!important;}';
 	addGlobalStyle("source_url_style", cssRules);
 }
 
@@ -251,54 +255,65 @@ function unpin(thepost) {
 }
 
 function applySettings() {
-	settings=parseSettings();
+	settings = parseSettings();
 
-	if (settings.hide_source)
+	if (settings.hide_source) {
 		hide_source();
+	}
 
-	if (settings.white_notice || settings.black_notice)
+	if (settings.white_notice || settings.black_notice) {
 		show_ratings();
+	}
 
-	if (settings.black_notice)
+	if (settings.black_notice) {
 		show_black_notices();
+	}
 
-	if (settings.white_notice)
+	if (settings.white_notice) {
 		show_white_notices();
+	}
 
-	if (settings.hide_pinned)
+	if (settings.hide_pinned) {
 		hide_pinned();
+	}
 
-	if (settings.show_tags)
+	if (settings.show_tags) {
 		show_tags();
+	}
 
-	if (settings.hide_premium)
+	if (settings.hide_premium) {
 		hide_premium();
+	}
 
-	if (settings.hide_recommended)
+	if (settings.hide_recommended) {
 		hide_recommended();
+	}
 
-	if (settings.hide_sponsored)
+	if (settings.hide_sponsored) {
 		hide_sponsored();
+	}
 }
 
-function defaultString(str){
-	if (typeof str == 'string')
+function defaultString(str) {
+	if (typeof str == 'string') {
 		return str
-	else
-		return String(str||'');
+	} else {
+		return String(str || '');
+	}
 }
 
 function parseSettings() {
 	var parsedSettings = settings;
 
-	if (settings === undefined || settings === null || settings === '' || settings === {})
+	if (settings === undefined || settings === null || settings === '' || settings === {}) {
 		parsedSettings = defaultSettings;
+	}
 
 	parsedSettings.listWhite = defaultString(parsedSettings.listWhite);
 	parsedSettings.listBlack = defaultString(parsedSettings.listBlack);
 	parsedSettings.listUltraWhite = defaultString(parsedSettings.listUltraWhite);
 	parsedSettings.listInfraBlack = defaultString(parsedSettings.listInfraBlack);
-	parsedSettings.views_threshold= Math.max(1, parsedSettings.views_threshold||0);
+	parsedSettings.views_threshold = Math.max(1, parsedSettings.views_threshold || 0);
 
 	return parsedSettings;
 }
@@ -307,7 +322,6 @@ function getAuthor(post) {
 	var author = {
 		name: post.dataset.tumblelogName
 	};
-
 	var avatar = document.getElementById(post.id.replace('_', '_avatar_'));
 
 	if (avatar) {
@@ -318,7 +332,7 @@ function getAuthor(post) {
 }
 
 function handleReveal(e) {
-	var searchUp;
+	var searchUp, postId, theList;
 
 	e.preventDefault();
 	e.stopPropagation();
@@ -329,21 +343,23 @@ function handleReveal(e) {
 		searchUp = searchUp.parentNode;
 	}
 
-	postId = searchUp.id.replace('notification_','');
+	postId = searchUp.id.replace('notification_', '');
 	theList = searchUp.parentNode;
 	theList.insertBefore(hiddenPosts[postId], searchUp);
 	theList.removeChild(searchUp);
+
 	manuallyShown[postId] = true;
 }
 
-function getID(post){
-	r_s=JSON.parse(post.getAttribute('data-json'));
-	return {root:String(r_s.root_id||r_s.id), current:String(r_s.id)};
+function getID(post) {
+	var r_s = JSON.parse(post.getAttribute('data-json'));
+
+	return {root: String(r_s.root_id || r_s.id), current: String(r_s.id)};
 }
 
 function displayRating(color, post, savedfrom) {
+	var listed = {}, spanListed, divRating, imgRating;
 
-	var listed={}, spanListed;
 	listed[post.id] = [];
 
 	while (savedfrom[color].length > 0) {
@@ -351,8 +367,8 @@ function displayRating(color, post, savedfrom) {
 	}
 
 	divRating = document.createElement('div');
-	divRating.id = color+'_rating_' + post.id;
-	divRating.className = 'savior_rating '+color+'listed';
+	divRating.id = color + '_rating_' + post.id;
+	divRating.className = 'savior_rating ' + color + 'listed';
 
 	imgRating = document.createElement('img');
 	imgRating.src = 'data:image/png;base64,' + icon;
@@ -368,8 +384,8 @@ function displayRating(color, post, savedfrom) {
 }
 
 function checkPost(post) {
-	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal;
-	var divRating, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags;
+	var olPosts, liPost, liRemove, savedfrom, author, li_notice, a_avatar, img_avatar, a_author, txtPosted, txtContents, j, a_reveal, div_inner;
+	var divRating, anchors, a, remove, ribbon_right, ribbon_left, i_reveal, span_notice_tags, span_tags, ids, reblogs, is_reblog, div_sentence;
 
 	if (post.className.indexOf('not_mine') < 0 && !settings.hide_own_posts) {
 		return;
@@ -398,17 +414,19 @@ function checkPost(post) {
 	}
 
 	ids = getID(post);
-	reblogs = (localStorage.getItem(ids.root)||'').split(',');
-	if ((reblogs.length==1)&&(reblogs[0]==''))
-		reblogs=[];
-	if (reblogs.indexOf(ids.current)==-1)
+	reblogs = (localStorage.getItem(ids.root) || '').split(',');
+	if ((reblogs.length == 1) && (reblogs[0] == '')) {
+		reblogs = [];
+	}
+	if (reblogs.indexOf(ids.current) == -1) {
 		reblogs.push(ids.current);
-	is_reblog = post.getElementsByClassName('reblog_source').length>0;
+	}
+	is_reblog = post.getElementsByClassName('reblog_source').length > 0;
 
 	savedfrom = needstobesaved(post.textContent.toLowerCase(), reblogs.length, is_reblog);  //todo fix textcontent matching json data with links
 
-	if ((savedfrom.uwhite.length===0) &&
-		((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || (savedfrom.seen && is_reblog)))	{
+	if ((savedfrom.uwhite.length === 0) &&
+		((savedfrom.black.length && savedfrom.white.length === 0) || savedfrom.iblack.length || (savedfrom.seen && is_reblog))) {
 
 		if (settings.show_notice) {
 			author = getAuthor(post);
@@ -452,6 +470,7 @@ function checkPost(post) {
 
 				if (settings.show_words) {
 					var bls = savedfrom.iblack.concat(savedfrom.black);
+
 					txtContents = ":";
 
 					for (j = 0; j < bls.length; j++) {
@@ -468,8 +487,9 @@ function checkPost(post) {
 				} else {
 					div_sentence.appendChild(document.createTextNode(' something from your blacklists.'));
 				}
-			} else
-				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen "+Math.max(1,savedfrom.seen-1)+" time(s) already."));
+			} else {
+				div_sentence.appendChild(document.createTextNode(" reblogged a post you've seen " + Math.max(1, savedfrom.seen - 1) + " time(s) already."));
+			}
 
 			a_reveal = document.createElement("a");
 			a_reveal.href = "#";
@@ -495,7 +515,7 @@ function checkPost(post) {
 
 					span_notice_tags = document.createElement("span");
 					span_notice_tags.appendChild(document.createTextNode("Tags: "));
-					span_notice_tags.appendChild(document.createTextNode(span_tags[0].textContent.replace(/#/g,' #')));
+					span_notice_tags.appendChild(document.createTextNode(span_tags[0].textContent.replace(/#/g, ' #')));
 
 					div_sentence.appendChild(span_notice_tags);
 				}
@@ -509,9 +529,11 @@ function checkPost(post) {
 		}
 		hiddenPosts[post.id] = liPost;
 		olPosts.removeChild(liPost);
+
 	} else if (is_reblog) {
 		if ((localStorage.length >= localStorageLimit) && !(localStorage.getItem(ids.root))) {
-			idx = (parseInt(localStorage.key(0))<parseInt(localStorage.key(localStorage.length-1)))?localStorage.key(0):localStorage.key(localStorage.length-1);
+
+			idx = (parseInt(localStorage.key(0)) < parseInt(localStorage.key(localStorage.length - 1))) ? localStorage.key(0) : localStorage.key(localStorage.length - 1);
 			localStorage.removeItem(idx);	//screw this
 		}
 		localStorage.setItem(ids.root, reblogs);
@@ -524,11 +546,13 @@ function checkPost(post) {
 	}
 
 	if (settings.white_notice) {
-		if (savedfrom.white.length > 0)
+		if (savedfrom.white.length > 0) {
 			displayRating('white', post, savedfrom);
+		}
 
-		if (savedfrom.uwhite.length > 0)
+		if (savedfrom.uwhite.length > 0) {
 			displayRating('uwhite', post, savedfrom);
+		}
 	}
 
 	divRating = document.getElementById('black_rating_' + post.id);
@@ -538,11 +562,13 @@ function checkPost(post) {
 	}
 
 	if (settings.black_notice) {
-		if (savedfrom.black.length > 0)
+		if (savedfrom.black.length > 0) {
 			displayRating('black', post, savedfrom);
+		}
 
-		if (savedfrom.iblack.length > 0)
+		if (savedfrom.iblack.length > 0) {
 			displayRating('iblack', post, savedfrom);
+		}
 	}
 
 	anchors = post.getElementsByTagName('a');
@@ -564,30 +590,34 @@ function checkPost(post) {
 	}
 }
 
-function hide_radar(){
-	var remove=document.getElementById('tumblr_radar');
+function hide_radar() {
+	var remove = document.getElementById('tumblr_radar');
+
 	remove.parentNode.removeChild(remove);
-	remove=document.getElementsByClassName('controls_section controls_section_radar')[0];
+	remove = document.getElementsByClassName('controls_section controls_section_radar')[0];
 	remove.parentNode.removeChild(remove);
 }
 
-function hide_recommended(){
-	var toHide=document.querySelectorAll('.is_recommended, .recommended-unit-container');
-	for (i=toHide.length; i--;) {
+function hide_recommended() {
+	var toHide = document.querySelectorAll('.is_recommended, .recommended-unit-container');
+
+	for (var i = toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none');
 	}
 }
 
-function hide_sponsored(){
-	var toHide=document.getElementsByClassName('yamplus-unit-container');
-	for (i=toHide.length; i--;) {
+function hide_sponsored() {
+	var toHide = document.getElementsByClassName('yamplus-unit-container');
+
+	for (var i = toHide.length; i--;) {
 		toHide[i].setAttribute('style', 'display:none');
 	}
 }
 
 function checkPosts() {
 	var keys = Object.keys(inProgress);
-	for(var i = keys.length; i--; ) {
+
+	for (var i = keys.length; i--;) {
 		if (inProgress.hasOwnProperty(keys[i])) {
 			checkPost(document.getElementById(keys[i]));
 			delete inProgress[keys[i]];
@@ -597,14 +627,16 @@ function checkPosts() {
 
 function diaper() {
 	var posts = document.getElementsByClassName('post');
+
 	for (var i = 0; i < posts.length; i += 1) {
 		var post = posts[i];
 		if (post.id && post.id.indexOf("post") === 0) {
 			inProgress[post.id] = true;
 		}
 	}
-	if (settings.hide_radar)
+	if (settings.hide_radar) {
 		hide_radar();
+	}
 	checkPosts();
 }
 
@@ -624,28 +656,28 @@ function waitForPosts() {
 }
 
 var defaultSettings = {
-	'listUltraWhite':'',
-	'listInfraBlack':'',
-	'listWhite': '',
-	'listBlack': '',
-	'hide_source': false,
-	'show_notice': true,
-	'logical_and': true,
-	'hide_own_posts': false,
-	'show_words': true,
-	'match_words': false,
-	'hide_promoted': false,
-	'white_notice': true,
-	'black_notice': true,
-	'hide_pinned': false,
-	'auto_unpin': false,
-	'show_tags': true,
-	'hide_premium': false,
-	'hide_seen_reblogs':false,
-	'views_threshold':2,
-	'hide_radar':	false,
-	'hide_recommended':false,
-	'hide_sponsored': false
+	'listUltraWhite':    '',
+	'listInfraBlack':    '',
+	'listWhite':         '',
+	'listBlack':         '',
+	'hide_source':       false,
+	'show_notice':       true,
+	'logical_and':       true,
+	'hide_own_posts':    false,
+	'show_words':        true,
+	'match_words':       false,
+	'hide_promoted':     false,
+	'white_notice':      true,
+	'black_notice':      true,
+	'hide_pinned':       false,
+	'auto_unpin':        false,
+	'show_tags':         true,
+	'hide_premium':      false,
+	'hide_seen_reblogs': false,
+	'views_threshold':   2,
+	'hide_radar':        false,
+	'hide_recommended':  false,
+	'hide_sponsored':    false
 };
 
 applySettings();
