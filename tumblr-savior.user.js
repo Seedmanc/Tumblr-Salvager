@@ -296,7 +296,7 @@ function applySettings() {
 
 function defaultString(str) {
 	if (typeof str == 'string') {
-		return str
+		return str;
 	} else {
 		return String(str || '');
 	}
